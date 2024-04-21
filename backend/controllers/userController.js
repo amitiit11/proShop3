@@ -22,8 +22,6 @@ const authUser = asyncHandler(async (req, res) => {
     res.status(401);
     throw new Error("Invalid email or password");
   }
-
-  
 });
 
 // @desc logout/ clear the jwt token
@@ -56,7 +54,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
 // @route PUT /api/users/profile
 // @access PRIVATE
 const updateUserProfile = asyncHandler(async (req, res) => {
-  console.log('###',req.user);
+  // console.log("###", req.user);
   const user = await User.findById(req.user._id);
   if (user) {
     user.name = req.body.name || user.name;
@@ -81,7 +79,8 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 // @route GET /api/users
 // @access PRIVATE/ADMIN
 const getUsers = asyncHandler(async (req, res) => {
-  res.send("get Users");
+  const users = await User({});
+  res.status(200).json(users);
 });
 
 // @desc register Users
@@ -116,21 +115,55 @@ const registerUsers = asyncHandler(async (req, res) => {
 // @route GET /api/users/:id
 // @access PRIVATE/ADMIN
 const getUserByID = asyncHandler(async (req, res) => {
-  res.send("get User by ID");
+  const user = User.findById(req.params.id).select("-password");
+  if (user) {
+    req.status(200).json(user);
+  } else {
+    res.status(404);
+    throw new Error("User not found");
+  }
 });
 
 // @desc delete Users
 // @route DELETE /api/users/:id
 // @access PRIVATE/ADMIN
 const deleteUser = asyncHandler(async (req, res) => {
-  res.send("delete Users");
+  const user = User.findById(req.params.id);
+
+  if (user) {
+    if (user.isAdmin) {
+      res.status(400);
+      throw new Error("Cannot delete admin user");
+    }
+    await User.deleteOne({ _id: user._id });
+    res.status(200).json({ message: "User deleted successfully" });
+  } else {
+    res.status(404);
+    throw new Error("User not found");
+  }
 });
 
 // @desc update user by ID
 // @route PUT /api/users/:id
 // @access PRIVATE/ADMIN
 const updateUser = asyncHandler(async (req, res) => {
-  res.send("UPDATE User by ID");
+  const user = User.findById(req.params.id);
+
+  if (user) {
+    user.name = req.body.name || user.name;
+    user.email = req.body.email || user.email;
+    user.isAdmin = Boolean(req.body.isAdmin);
+    const updatedUser = await user.save();
+    res.status(200).json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      isAdmin: updatedUser.isAdmin,
+    });
+  } else {
+    res.status(400);
+    throw new Error("user not found");
+  }
 });
 
 export {
