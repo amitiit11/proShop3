@@ -5,9 +5,17 @@ import asyncHandler from "../middleware/asyncHandler.js";
 // @route GET /api/products
 // @access Public
 const getProducts = asyncHandler(async (req, res) => {
-  const products = await Product.find({});
+  const pageSize = 2;
+  console.log(req, '#########');
+  const page = Number(req.query.pageNumber) || 1;
 
-  res.json(products);
+  const count = await Product.countDocuments();
+
+  const products = await Product.find({})
+    .limit(pageSize)
+    .skip(pageSize * (page - 1));
+
+  res.json({ products, page, pages: Math.ceil(count / pageSize) });
 });
 
 // @desc Fetch a products
@@ -100,13 +108,13 @@ const createProductReview = asyncHandler(async (req, res) => {
       user: req.user._id,
     };
     product.reviews.push(review);
-    product.numReviews = product.reviews.length
+    product.numReviews = product.reviews.length;
 
     product.rating =
       product.reviews.reduce((acc, review) => acc + review.rating, 0) /
       product.reviews.length;
     await product.save();
-    res.status(201).json({ message : 'Review added'});
+    res.status(201).json({ message: "Review added" });
   } else {
     res.status(404);
     throw new Error("resource not found");
