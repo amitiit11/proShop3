@@ -6,6 +6,8 @@ import Loader from "../component/Loader";
 import Message from "../component/Message";
 import { Link, useParams } from "react-router-dom";
 import Paginate from "../component/Paginate";
+import ProductCarousel from "../component/ProductCarousel";
+import Meta from "../component/Meta";
 
 const HomeScreen = () => {
   const {pageNumber, keyword} = useParams();
@@ -13,13 +15,14 @@ const HomeScreen = () => {
 
   return (
     <>
-    {keyword && <Link to='/' className="btn btn-light">Go Back</Link>}
+    {!keyword ? <ProductCarousel/> : <Link to='/' className="btn btn-light">Go Back</Link>}
       {isLoading ? (
         <Loader/>
       ) : error ? (
         <Message varient='danger'>{error?.data?.message || error.error}</Message>
       ) : (
         <>
+        <Meta/>
           <h1>Latest Products</h1>
           <Row>
             {data.products.map((product) => {
